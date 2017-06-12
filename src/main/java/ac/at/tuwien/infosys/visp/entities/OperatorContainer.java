@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
 @Data
-@JsonPropertyOrder
+@JsonPropertyOrder({ "minute" })
 public class OperatorContainer {
 
-    private String time;
+    private Integer minute;
     private Integer distributedata = 0;
     private Integer availability = 0;
     private Integer calculateperformance = 0;

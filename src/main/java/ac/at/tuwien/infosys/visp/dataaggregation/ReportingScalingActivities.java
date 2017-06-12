@@ -60,10 +60,10 @@ public class ReportingScalingActivities {
         List<OperatorContainer> operators = new ArrayList<>();
 
         while (recordingCounter < observationDuration) {
-            GraphData gd = new GraphData(firstTime.toString(), recordingCounter);
+            GraphData gd = new GraphData(recordingCounter);
 
             OperatorContainer opContainer = new OperatorContainer();
-            opContainer.setTime(firstTime.toString());
+            opContainer.setMinute(recordingCounter);
 
             for (ScalingActivity sa : activities) {
                 switch (sa.getScalingActivity()) {
@@ -91,6 +91,7 @@ public class ReportingScalingActivities {
                             case "calculateperformance" : opContainer.calculateperformanceInc(); break;
                             case "calculateavailability" : opContainer.calculateavailabilityInc(); break;
                             case "calculatequality" : opContainer.calculatequalityInc(); break;
+                            case "calculateoee" : opContainer.calculateoeeInc(); break;
                             case "temperature" : opContainer.temperatureInc(); break;
                             case "warning" : opContainer.warningInc(); break;
                             case "generatereport" : opContainer.generatereportInc(); break;
@@ -106,6 +107,7 @@ public class ReportingScalingActivities {
                             case "calculateperformance" : opContainer.calculateperformanceDec(); break;
                             case "calculateavailability" : opContainer.calculateavailabilityDec(); break;
                             case "calculatequality" : opContainer.calculatequalityDec(); break;
+                            case "calculateoee" : opContainer.calculateoeeDec(); break;
                             case "temperature" : opContainer.temperatureDec(); break;
                             case "warning" : opContainer.warningDec(); break;
                             case "generatereport" : opContainer.generatereportDec(); break;
@@ -139,7 +141,7 @@ public class ReportingScalingActivities {
         CsvMapper mapper1 = new CsvMapper();
         CsvSchema schema1 = mapper1.schemaFor(OperatorContainer.class).withHeader();
         try {
-            Path path = Paths.get("reporting/operatorQuantity.csv");
+            Path path = Paths.get("reporting/operatorScalings.csv");
             if (Files.exists(path)) {
                 Files.delete(path);
             }
@@ -155,12 +157,12 @@ public class ReportingScalingActivities {
                 Files.delete(overalmetricsPath);
             }
             Files.createFile(overalmetricsPath);
-            Files.write(overalmetricsPath, ("TotalVMStarts: " + totalVMStarts + "\n").getBytes());
-            Files.write(overalmetricsPath, ("TotalVMProlongings: " + totalVMProlongings + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(overalmetricsPath, ("TotalVMDownscalings: " + totalVMDownscalings + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(overalmetricsPath, ("TotalContainerUpscalings: " + totalContainerUpscalings + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(overalmetricsPath, ("TotalContainerDownscalings: " + totalContainerDownscalings + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(overalmetricsPath, ("TotalContainerMigrations: " + totalContainerMigrations + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(overalmetricsPath, ("Total VM Starts: " + totalVMStarts + "\n").getBytes());
+            Files.write(overalmetricsPath, ("Total VM Prolongings: " + totalVMProlongings + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(overalmetricsPath, ("Total VM Downscalings: " + totalVMDownscalings + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(overalmetricsPath, ("Total Container Upscalings: " + totalContainerUpscalings + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(overalmetricsPath, ("Total Container Downscalings: " + totalContainerDownscalings + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(overalmetricsPath, ("Total Container Migrations: " + totalContainerMigrations + "\n").getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
             LOG.error(e.getMessage());
         }
@@ -169,7 +171,7 @@ public class ReportingScalingActivities {
         CsvMapper mapper = new CsvMapper();
         CsvSchema schema = mapper.schemaFor(GraphData.class).withHeader();
         try {
-            Path path = Paths.get("reporting/scalingactivities.csv");
+            Path path = Paths.get("reporting/scalingActivities.csv");
             if (Files.exists(path)) {
                 Files.delete(path);
             }

@@ -84,8 +84,8 @@ public class QueueLoad {
         Integer recordingCounter = 0;
 
         while (recordingCounter < observationDuration) {
-            IncomingLoadData gd_load = new IncomingLoadData(firstTime.toString(), recordingCounter);
-            IncomingLoadData gd_rate = new IncomingLoadData(firstTime.toString(), recordingCounter);
+            IncomingLoadData gd_load = new IncomingLoadData(recordingCounter);
+            IncomingLoadData gd_rate = new IncomingLoadData(recordingCounter);
 
             if (!activities1.isEmpty()) {
                 gd_load.setDistributedata(calculateLoad(activities1));

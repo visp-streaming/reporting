@@ -56,7 +56,7 @@ public class IncomingLoad {
         Integer recordingCounter = 0;
 
         while (recordingCounter < observationDuration) {
-            IncomingLoadData gd = new IncomingLoadData(firstTime.toString(), recordingCounter);
+            IncomingLoadData gd = new IncomingLoadData(recordingCounter);
 
             if (!activities1.isEmpty()) {
                 gd.setDistributedata(calculateRate(activities1));

@@ -185,8 +185,8 @@ public class SLACompliance {
 
             SLAComplianceContainer container = new SLAComplianceContainer();
             container.setOperator(entry.getKey());
-            container.setTotal(total);
-            container.setViolations(violations);
+            container.setTotalItems(total);
+            container.setTotalViolations(violations);
             container.setNoViolations(noViolations);
             container.setMaxDoubleTimeViolation(maxDoubleTimeViolation);
             container.setMaxFiveTimeViolation(maxFiveTimeViolations);
@@ -198,7 +198,13 @@ public class SLACompliance {
             CsvMapper mapper = new CsvMapper();
             CsvSchema schema = mapper.schemaFor(ProcessingDurationData.class);
             try {
-                Path path = Paths.get("reporting/" + entry.getKey() + "_timetoadopt.csv");
+                Path dirPath = Paths.get("reporting/operators/");
+                Path path = Paths.get("reporting/operators/timeToAdapt_" + entry.getKey() + ".csv");
+
+                if (!Files.exists(dirPath)) {
+                    Files.createDirectories(dirPath);
+                }
+
                 if (Files.exists(path)) {
                     Files.delete(path);
                 }
@@ -216,12 +222,12 @@ public class SLACompliance {
                 Files.delete(slaComplianceMetricsPath);
             }
             Files.createFile(slaComplianceMetricsPath);
-            Files.write(slaComplianceMetricsPath, ("RealTimeCompliance: " + globalRealTimeCompliance/globalCounter + "\n").getBytes());
-            Files.write(slaComplianceMetricsPath, ("NearRealTimeCompliance: " + globalnearRealTimeCompliance/globalCounter + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(slaComplianceMetricsPath, ("RelaxedTimeCompliance: " + globalrelaxedCompliance/globalCounter + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(slaComplianceMetricsPath, ("RealTimeCompliance wo temp and avail: " + globalRealTimeCompliancewithoutTempAndAvailability/globalCounterwithoutTempAndAvailability + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(slaComplianceMetricsPath, ("NearRealTimeCompliance wo temp and avail: " + globalnearRealTimeCompliancewithoutTempAndAvailability/globalCounterwithoutTempAndAvailability + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(slaComplianceMetricsPath, ("RelaxedTimeCompliance wo temp and avail: " + globalrelaxedCompliancewithoutTempAndAvailability/globalCounterwithoutTempAndAvailability + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(slaComplianceMetricsPath, ("Real Time Compliance: " + globalRealTimeCompliance/globalCounter + "\n").getBytes());
+            Files.write(slaComplianceMetricsPath, ("Near Real Time Compliance: " + globalnearRealTimeCompliance/globalCounter + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(slaComplianceMetricsPath, ("Relaxed Time Compliance: " + globalrelaxedCompliance/globalCounter + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(slaComplianceMetricsPath, ("Real Time Compliance without temperature and availability: " + globalRealTimeCompliancewithoutTempAndAvailability/globalCounterwithoutTempAndAvailability + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(slaComplianceMetricsPath, ("Near Real Time Compliance without temperature and availability: " + globalnearRealTimeCompliancewithoutTempAndAvailability/globalCounterwithoutTempAndAvailability + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(slaComplianceMetricsPath, ("Relaxed Time Compliance without temperature and availability: " + globalrelaxedCompliancewithoutTempAndAvailability/globalCounterwithoutTempAndAvailability + "\n").getBytes(), StandardOpenOption.APPEND);
 
         } catch (IOException e) {
             LOG.error(e.getMessage());

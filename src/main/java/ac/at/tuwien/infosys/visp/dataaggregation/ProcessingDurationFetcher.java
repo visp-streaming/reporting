@@ -8,7 +8,6 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -58,7 +57,13 @@ public class ProcessingDurationFetcher {
         CsvMapper mapper = new CsvMapper();
         CsvSchema schema = mapper.schemaFor(ProcessingDurationData.class);
         try {
-            Path path = Paths.get("reporting/" + parameter + "_duration.csv");
+            Path dirPath = Paths.get("reporting/operators/");
+            Path path = Paths.get("reporting/operators/duration_" + parameter + ".csv");
+
+            if (!Files.exists(dirPath)) {
+                Files.createDirectories(dirPath);
+            }
+
             if (Files.exists(path)) {
                 Files.delete(path);
             }

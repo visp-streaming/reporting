@@ -5,11 +5,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
 @Data
-@JsonPropertyOrder
+@JsonPropertyOrder({"minute"})
 public class GraphData {
 
-    private Integer counter;
-    private String time;
+    private Integer minute;
     private Integer vmUp;
     private Integer vmDown;
     private Integer vmprolongLease;
@@ -19,9 +18,8 @@ public class GraphData {
     private Integer totalVMs;
     private Integer totalContainer;
 
-    public GraphData(String time, Integer counter) {
-        this.counter = counter;
-        this.time = time;
+    public GraphData(Integer minute) {
+        this.minute = minute;
         this.vmUp = 0;
         this.vmprolongLease = 0;
         this.vmDown = 0;
