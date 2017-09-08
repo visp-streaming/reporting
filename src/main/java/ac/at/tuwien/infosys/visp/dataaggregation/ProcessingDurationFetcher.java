@@ -1,5 +1,14 @@
 package ac.at.tuwien.infosys.visp.dataaggregation;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.PreDestroy;
+
 import ac.at.tuwien.infosys.visp.entities.ProcessingDurationData;
 import ac.at.tuwien.infosys.visp.repository.ProcessingDurationRepository;
 import ac.at.tuwien.infosys.visp.repository.entities.ProcessingDuration;
@@ -9,14 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PreDestroy;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class ProcessingDurationFetcher {
@@ -40,7 +41,7 @@ public class ProcessingDurationFetcher {
     }
 
     private ArrayList<ProcessingDurationData> obtainProcessingDurationData(String parameter) {
-        List<ProcessingDuration> items = pcr.findByOperator(parameter);
+        List<ProcessingDuration> items = pcr.findByOperatortype(parameter);
 
         ArrayList<ProcessingDurationData> results = new ArrayList<>();
 

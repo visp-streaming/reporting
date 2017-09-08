@@ -1,5 +1,17 @@
 package ac.at.tuwien.infosys.visp.dataaggregation;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PreDestroy;
+
 import ac.at.tuwien.infosys.visp.entities.ProcessingDurationData;
 import ac.at.tuwien.infosys.visp.entities.SLAComplianceContainer;
 import ac.at.tuwien.infosys.visp.entities.TimeToAdapt;
@@ -16,17 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PreDestroy;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class SLACompliance {
@@ -46,7 +47,7 @@ public class SLACompliance {
 
         expectedDurations = new HashMap<>();
 
-        expectedDurations.put("distributedata", 900);
+        expectedDurations.put("distributedata", 1500);
         expectedDurations.put("availability", 600);
         expectedDurations.put("calculateperformance", 750);
         expectedDurations.put("calculateavailability", 750);
@@ -62,6 +63,7 @@ public class SLACompliance {
 
         DateTime time = null;
 
+
         Double globalCounter = 0.0;
         Double globalRealTimeCompliance = 0.0;
         Double globalnearRealTimeCompliance = 0.0;
@@ -76,7 +78,7 @@ public class SLACompliance {
         for (Map.Entry<String, Integer> entry : expectedDurations.entrySet()) {
             List<ProcessingDurationData> timeToAdoptSingle = new ArrayList<>();
 
-            List<ProcessingDuration> durations = pcr.findByOperatorOrderByIdDesc(entry.getKey());
+            List<ProcessingDuration> durations = pcr.findByOperatortypeOrderByIdAsc(entry.getKey());
 
             Integer total = 0;
             Integer violations = 0;
@@ -92,6 +94,8 @@ public class SLACompliance {
 
 
             for (ProcessingDuration duration : durations) {
+
+
                 if (time==null) {
                     time = duration.getTime().plusMinutes(observationDuration);
                 }
@@ -102,7 +106,7 @@ public class SLACompliance {
 
                 globalCounter++;
 
-                if (!duration.getOperator().equals("temperature") && (!duration.getOperator().equals("availability"))) {
+                if (!duration.getOperatortype().equals("temperature") && (!duration.getOperatortype().equals("availability"))) {
                     globalCounterwithoutTempAndAvailability++;
                 }
 
@@ -116,7 +120,7 @@ public class SLACompliance {
                         globalnearRealTimeCompliance++;
                         globalrelaxedCompliance++;
 
-                        if (!duration.getOperator().equals("temperature") && (!duration.getOperator().equals("availability"))) {
+                        if (!duration.getOperatortype().equals("temperature") && (!duration.getOperatortype().equals("availability"))) {
                             globalnearRealTimeCompliancewithoutTempAndAvailability++;
                             globalrelaxedCompliancewithoutTempAndAvailability++;
                         }
@@ -131,7 +135,7 @@ public class SLACompliance {
                             maxFiveTimeViolations++;
                             globalrelaxedCompliance++;
 
-                            if (!duration.getOperator().equals("temperature") && (!duration.getOperator().equals("availability"))) {
+                            if (!duration.getOperatortype().equals("temperature") && (!duration.getOperatortype().equals("availability"))) {
                                 globalrelaxedCompliancewithoutTempAndAvailability++;
                             }
 
@@ -146,7 +150,7 @@ public class SLACompliance {
                     globalnearRealTimeCompliance++;
                     globalrelaxedCompliance++;
 
-                    if (!duration.getOperator().equals("temperature") && (!duration.getOperator().equals("availability"))) {
+                    if (!duration.getOperatortype().equals("temperature") && (!duration.getOperatortype().equals("availability"))) {
                         globalRealTimeCompliancewithoutTempAndAvailability++;
                         globalnearRealTimeCompliancewithoutTempAndAvailability++;
                         globalrelaxedCompliancewithoutTempAndAvailability++;
@@ -163,15 +167,11 @@ public class SLACompliance {
                         Integer adoptnormal = incident.getMillisOfDay() - resolveNormal.getMillisOfDay();
                         Integer adopttwice = incident.getMillisOfDay() - resolveDouble.getMillisOfDay();
 
-                        if ((adoptnormal > 0) && (adopttwice > 0)) {
+                        if ((Math.abs(adoptnormal) > 0) && (Math.abs(adopttwice) > 0)) {
                             ProcessingDurationData pdd = new ProcessingDurationData();
-                            if (adoptnormal<0) {
-                                pdd.setDuration(adoptnormal * -1.0);
-                            } else {
-                                pdd.setDuration(adoptnormal + 0.0);
-                            }
+                                pdd.setDuration(Math.abs(adoptnormal) + 0.0);
                             timeToAdoptSingle.add(pdd);
-                            timeToAdapts.add(new TimeToAdapt(entry.getKey(), adopttwice , adoptnormal));
+                            timeToAdapts.add(new TimeToAdapt(entry.getKey(), Math.abs(adopttwice) , Math.abs(adoptnormal)));
                         }
 
                         incident = null;
@@ -222,9 +222,29 @@ public class SLACompliance {
                 Files.delete(slaComplianceMetricsPath);
             }
             Files.createFile(slaComplianceMetricsPath);
-            Files.write(slaComplianceMetricsPath, ("Real Time Compliance: " + globalRealTimeCompliance/globalCounter + "\n").getBytes());
-            Files.write(slaComplianceMetricsPath, ("Near Real Time Compliance: " + globalnearRealTimeCompliance/globalCounter + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(slaComplianceMetricsPath, ("Relaxed Time Compliance: " + globalrelaxedCompliance/globalCounter + "\n").getBytes(), StandardOpenOption.APPEND);
+
+
+            Integer totalItems = 0;
+            Integer maxNearRealtimeViolations = 0;
+            Integer maxRelaxedTimeViolations = 0;
+            Integer moreThanRelaxedTimeViolations = 0;
+            Integer noViolations = 0;
+
+
+            for (SLAComplianceContainer container : data) {
+                totalItems += container.getTotalItems();
+                maxNearRealtimeViolations += container.getMaxDoubleTimeViolation();
+                maxRelaxedTimeViolations += container.getMaxFiveTimeViolation();
+                moreThanRelaxedTimeViolations += container.getMoreThanFiveTimeViolation();
+                noViolations += container.getNoViolations();
+            }
+
+            Files.write(slaComplianceMetricsPath, ("Total Items: " + totalItems + "\n").getBytes());
+            Files.write(slaComplianceMetricsPath, ("No violations: " + noViolations + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(slaComplianceMetricsPath, ("Max Near-Realtime Violations: " + maxNearRealtimeViolations + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(slaComplianceMetricsPath, ("Max Relaxed-Time Violations: " + maxRelaxedTimeViolations + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(slaComplianceMetricsPath, ("More than Relaxed-Time violations: " + moreThanRelaxedTimeViolations + "\n").getBytes(), StandardOpenOption.APPEND);
+
             Files.write(slaComplianceMetricsPath, ("Real Time Compliance without temperature and availability: " + globalRealTimeCompliancewithoutTempAndAvailability/globalCounterwithoutTempAndAvailability + "\n").getBytes(), StandardOpenOption.APPEND);
             Files.write(slaComplianceMetricsPath, ("Near Real Time Compliance without temperature and availability: " + globalnearRealTimeCompliancewithoutTempAndAvailability/globalCounterwithoutTempAndAvailability + "\n").getBytes(), StandardOpenOption.APPEND);
             Files.write(slaComplianceMetricsPath, ("Relaxed Time Compliance without temperature and availability: " + globalrelaxedCompliancewithoutTempAndAvailability/globalCounterwithoutTempAndAvailability + "\n").getBytes(), StandardOpenOption.APPEND);
@@ -262,22 +282,22 @@ public class SLACompliance {
             }
 
             realTimeAdopt.setMeanImpl(new Mean());
-            Files.write(path, ("TimeToAdoptRealtime - mean: " + realTimeAdopt.getMean() + "\n").getBytes());
-            Files.write(path, ("TimeToAdoptRealtime - standarddeviation: " + realTimeAdopt.getStandardDeviation() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Realtime - mean: " + realTimeAdopt.getMean() + "\n").getBytes());
+            Files.write(path, ("Realtime - standarddeviation mean: " + realTimeAdopt.getStandardDeviation() + "\n").getBytes(), StandardOpenOption.APPEND);
             realTimeAdopt.setMeanImpl(new Median());
-            Files.write(path, ("TimeToAdoptRealtime - median: " + realTimeAdopt.getMean() + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(path, ("TimeToAdoptRealtime - standarddeviation: " + realTimeAdopt.getStandardDeviation() + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(path, ("TimeToAdoptRealtime - max: " + realTimeAdopt.getMax() + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(path, ("TimeToAdoptRealtime - min: " + realTimeAdopt.getMin() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Realtime - median: " + realTimeAdopt.getMean() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Realtime - standarddeviation meadian: " + realTimeAdopt.getStandardDeviation() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Realtime - max: " + realTimeAdopt.getMax() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Realtime - min: " + realTimeAdopt.getMin() + "\n").getBytes(), StandardOpenOption.APPEND);
 
             nearrealTimeAdopt.setMeanImpl(new Mean());
-            Files.write(path, ("TimeToAdoptNearRealtime - mean: " + nearrealTimeAdopt.getMean() + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(path, ("TimeToAdoptNearRealtime - standarddeviation mean: " + nearrealTimeAdopt.getStandardDeviation() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Near-Realtime - mean: " + nearrealTimeAdopt.getMean() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Near-Realtime - standarddeviation mean: " + nearrealTimeAdopt.getStandardDeviation() + "\n").getBytes(), StandardOpenOption.APPEND);
             nearrealTimeAdopt.setMeanImpl(new Median());
-            Files.write(path, ("TimeToAdoptNearRealtime - median: " + nearrealTimeAdopt.getMean() + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(path, ("TimeToAdoptNearRealtime - standarddeviation median: " + nearrealTimeAdopt.getStandardDeviation() + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(path, ("TimeToAdoptNearRealtime - max: " + nearrealTimeAdopt.getMax() + "\n").getBytes(), StandardOpenOption.APPEND);
-            Files.write(path, ("TimeToAdoptNearRealtime - min: " + nearrealTimeAdopt.getMin() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Near-Realtime - median: " + nearrealTimeAdopt.getMean() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Near-Realtime - standarddeviation median: " + nearrealTimeAdopt.getStandardDeviation() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Near-Realtime - max: " + nearrealTimeAdopt.getMax() + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(path, ("Near-Realtime - min: " + nearrealTimeAdopt.getMin() + "\n").getBytes(), StandardOpenOption.APPEND);
 
         } catch (IOException e) {
             LOG.error(e.getMessage());

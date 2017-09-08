@@ -1,5 +1,12 @@
 package ac.at.tuwien.infosys.visp.dataaggregation;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
 import ac.at.tuwien.infosys.visp.entities.IncomingLoadData;
 import ac.at.tuwien.infosys.visp.repository.QueueMonitorRepository;
 import ac.at.tuwien.infosys.visp.repository.entities.QueueMonitor;
@@ -11,14 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PreDestroy;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class IncomingLoad {
@@ -34,7 +33,7 @@ public class IncomingLoad {
     @Value("${observationDuration}")
     private Integer observationDuration;
 
-    @PreDestroy
+    //@PreDestroy
     public void generateCSV() {
 
         String distributedata = infrastructureHost + "/sourcemachinedata>distributedata";
